@@ -1,0 +1,31 @@
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+
+<head>
+        <title>Table - Reuter's news check</title>
+</head>
+
+<main role="main" class="container">
+<div class="table-wrapper-scroll-y my-custom-scrollbar">
+    <table class="table table-bordered table-striped mb-0 table-hover">
+        <thead class="table-info table-dark">
+        <tr>
+            <th scope="col" >Entry time</th>
+            <th scope="col">Key</th>
+            <th scope="col">Frequency</th>
+        </tr>
+        </thead>
+        <tbody>
+                {% for date in hourly_key_details %}
+                    {% for key in hourly_key_details[date] %}
+                        <tr>
+                        <td>{{ date }}</td>
+                        <td>{{ key }}</td>
+                        <td>{{ hourly_key_details[date][key] }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+        </tbody>
+    </table>
+</div>
+</main>

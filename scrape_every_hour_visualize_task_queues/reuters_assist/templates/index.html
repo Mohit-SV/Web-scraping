@@ -1,0 +1,167 @@
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+
+<head>
+        <title>Reuter's news check</title>
+        <style>
+        .progress1 {
+            width: 100%;
+            text-align: center;
+        }
+        .progress2 {
+            width: 100%;
+            text-align: center;
+        }
+        .text-center {
+        text-align: center;
+        }
+        p.ex1 {
+        margin-left: 10%;
+        }
+        @media (min-width: 1200px) {
+        .container{
+        max-width: 900px;
+        }
+        }
+        .bar {
+          width: 0;
+          height: 100%;
+          transition: height .3s;
+          background:#000;
+        }
+        </style>
+</head>
+
+<body>
+    <br>
+    <pre id="demo1" onload="startTime"></pre>
+    <pre id="demo2" onload="startTime2"></pre>
+    <pre id="demo3" onload="startTime3"></pre>
+    <main role="main" class="container">
+        <div class="text-center">
+        <div class="jumbotron">
+        <h1>Hello, Harvesters!</h1>
+            <br><br>
+        <div id="progress-wrapper">
+            <button id="start-bg-job" class="btn btn-primary">Scrape from site</button><br><br>
+            <div id="progress1"></div>
+            <br>
+                <button id="start-bg-job2" class="btn btn-secondary">Build Hourly Schema of Key Frequency</button><br><br>
+            <div id="progress2"></div>
+            <br>
+            <br>
+
+            <a class="nav-link" href="{{ url_for('gen_table') }}">GENERATE TABLE OF HOURLY KEY_FREQUENCY</a>
+        </div>
+        </div>
+        </div>
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/nanobar/0.2.1/nanobar.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+        <script>
+        function start_long_task() {
+        // add task status element
+        div = $('<div class="progress1"><div></div><div>0%</div><div>...</div><div>&nbsp;</div></div><hr>');
+        $('#progress1').append(div);
+
+        // create a progress bar
+
+        var nanobar = new Nanobar({
+            bg: 'acf',
+            target: div[0].childNodes[0]
+        });
+
+        // send ajax POST request to start background job
+        $.ajax({
+            type: 'POST',
+            url: '/scraper',
+            success: function(data, status, request) {
+                status_url = request.getResponseHeader('Location');
+                update_progress(status_url, nanobar, div[0]);
+            },
+            error: function() {
+                alert('Unexpected error');
+            }
+        });
+        }
+        function update_progress(status_url, nanobar, status_div) {
+        // send GET request to status URL
+        $.getJSON(status_url, function(data) {
+            // update UI
+            percent = parseInt(data['current'] * 100 / data['total']);
+            nanobar.go(percent);
+            $(status_div.childNodes[1]).text(percent + '%');
+            $(status_div.childNodes[2]).text(data['status']);
+            if (data['state'] != 'PENDING' && data['state'] != 'PROGRESS') {
+                if ('result' in data) {
+                    // show result
+                    $(status_div.childNodes[3]).text('Result: ' + data['result']);
+                }
+                else {
+                    // something unexpected happened
+                    $(status_div.childNodes[3]).text('Result: ' + data['state']);
+                }
+            }
+            else {
+                // rerun in 2 seconds
+                setTimeout(function() {
+                    update_progress(status_url, nanobar, status_div);
+                }, 2000);
+            }
+        });
+        }
+        $(function() {
+            $('#start-bg-job').click(start_long_task);
+        });
+
+        function start_long_task2() {
+        // add task status element
+        div = $('<div class="progress2"><div></div><div>0%</div><div>...</div><div>&nbsp;</div></div><hr>');
+        $('#progress2').append(div);
+
+        // create a progress bar
+
+        var nanobar = new Nanobar({
+            bg: 'rgba(0,0,0,1)',
+            target: div[0].childNodes[0]
+        });
+
+        // send ajax POST request to start background job
+        $.ajax({
+            type: 'POST',
+            url: '/schema',
+            success: function(data, status, request) {
+                status_url = request.getResponseHeader('Location');
+                update_progress(status_url, nanobar, div[0]);
+            },
+            error: function() {
+                alert('Unexpected error');
+            }
+        });
+        }
+        $(function() {
+            $('#start-bg-job2').click(start_long_task2);
+        });
+        </script>
+
+        </main>
+</body>
+
+<footer class="page-footer font-small blue pt-4">
+    <div class="footer-copyright text-left py-3">
+        <p class="ex1">
+            *What Scraper does?
+            <br>
+            => Scrapes reuters news site for the regions 'India', 'United States', 'United Kingdom',
+            'Deutschland', 'América Latina' extracting the desired fields; stores into the database(DB).
+            <br>
+            *What Schema gives?
+            <br>
+            => Generates a schema of frequency of extraction/scraping of the fields from DB for every
+            hour (/day) in the desired range of time.
+            <br><br>
+        </p>
+    </div>
+</footer>
